@@ -819,7 +819,7 @@ viewResult nixosChannels outMsg toRoute categoryName model viewSuccess viewBucke
             if result.hits.total.value == 0 && List.length buckets == 0 then
                 div [ class "search-results" ]
                     [ ul [ class "search-sidebar" ] searchBuckets
-                    , viewNoResults categoryName
+                    , (viewNoResults categoryName model outMsg)
                     ]
 
             else if List.length buckets > 0 then
@@ -866,16 +866,21 @@ viewResult nixosChannels outMsg toRoute categoryName model viewSuccess viewBucke
 
 viewNoResults :
     String
+    -> Model a b
+    -> (Msg a b -> c)
     -> Html c
-viewNoResults categoryName =
+viewNoResults categoryName model outMsg =
     div [ class "search-no-results" ]
         [ h2 [] [ text <| "No " ++ categoryName ++ " found!" ]
-        , text "You might want to "
-        , Html.a [ href "https://nixos.org/manual/nixpkgs/stable/#chap-quick-start" ] [ text "add a package" ]
-        , text " or "
-        , a [ href "https://github.com/NixOS/nixpkgs/issues/new?assignees=&labels=0.kind%3A+packaging+request&template=packaging_request.md&title=Package+request%3A+PACKAGENAME" ] [ text "make a packaging request" ]
-        , text "."
-        ]
+        , text "You might want to"
+        , ul [ class "suggestion-list" ]
+            ((if model.channel /= "unstable"
+                then [ li [] [ Html.a [ href "#", onClick <| outMsg (ChannelChange "unstable") ] [ text "Check the unstable channel" ] ] ]
+                else []) ++
+            [ li [] [ a [ href ("https://github.com/NixOS/nixpkgs/issues?q=label%3A\"0.kind%3A+packaging+request\"+" ++ (Maybe.withDefault "" model.query)) ] [ text "Check if it has already been requested" ] ]
+            , li [] [ a [ href "https://github.com/NixOS/nixpkgs/issues/new?assignees=&labels=0.kind%3A+packaging+request&template=packaging_request.md&title=Package+request%3A+PACKAGENAME" ] [ text "Submit a packaging request" ] ]
+            , li [] [ Html.a [ href "https://nixos.org/manual/nixpkgs/stable/#chap-quick-start" ] [ text "Add the package yourself" ] ]
+            ])]
 
 
 closeButton : Html a
